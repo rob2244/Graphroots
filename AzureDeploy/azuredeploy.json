@@ -52,6 +52,13 @@
       "metadata": {
         "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
       }
+    },
+    "websitePort": {
+      "type": "int",
+      "defaultValue": 4000,
+      "metadata": {
+        "description": "The default port for a web application, should be the same port exposed by the container"
+      }
     }
   },
   "variables": {
@@ -110,7 +117,15 @@
       },
       "properties": {
         "name": "[variables('appPlanName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServiceName'))]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServiceName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "WEBSITES_PORT",
+              "value": "[parameters('websitePort')]"
+            }
+          ]
+        }
       }
     }
   ],
