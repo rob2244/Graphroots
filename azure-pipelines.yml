@@ -27,7 +27,7 @@ steps:
   inputs:
     SourceFolder: '$(Build.SourcesDirectory)/AzureDeploy'
     Contents: '**'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/AzureDeploy'
 
 - task: PublishBuildArtifacts@1
   displayName: "Publish build artifacts"
