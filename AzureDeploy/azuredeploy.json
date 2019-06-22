@@ -88,6 +88,7 @@
     {
       "name": "[variables('appServiceName')]",
       "type": "Microsoft.Web/serverfarms",
+      "kind": "linux",
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-08-01",
       "sku": {
@@ -119,6 +120,7 @@
         "name": "[variables('appPlanName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServiceName'))]",
         "siteConfig": {
+          "linuxFxVersion": "DOCKER|nginx",
           "appSettings": [
             {
               "name": "WEBSITES_PORT",
