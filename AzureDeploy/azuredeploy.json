@@ -106,9 +106,8 @@
     {
       "name": "[variables('appServiceName')]",
       "type": "Microsoft.Web/sites",
-      "location": "[resourceGroup().location]",
-      "kind": "app,linux,container",
       "apiVersion": "2018-02-01",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]"
       ],
@@ -122,20 +121,6 @@
         "siteConfig": {
           "linuxFxVersion": "DOCKER|nginx",
           "appSettings": [
-            {
-              "name": "DOCKER_REGISTRY_SERVER_URL",
-              "appCommandLine": "",
-              "alwaysOn": false,
-              "value": "https://index.docker.io"
-            },
-            {
-              "name": "DOCKER_REGISTRY_SERVER_USERNAME",
-              "value": ""
-            },
-            {
-              "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
-              "value": null
-            },
             {
               "name": "WEBSITES_PORT",
               "value": "[parameters('websitePort')]"
