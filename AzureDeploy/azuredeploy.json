@@ -110,7 +110,7 @@
       "kind": "app,linux,container",
       "apiVersion": "2016-08-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('appServiceName'))]"
+        "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]"
       ],
       "tags": {
         "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', variables('appServiceName')))]": "Resource",
