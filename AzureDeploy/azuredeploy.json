@@ -86,7 +86,7 @@
       }
     },
     {
-      "name": "[variables('appServiceName')]",
+      "name": "[variables('appPlanName')]",
       "type": "Microsoft.Web/serverfarms",
       "kind": "linux",
       "location": "[resourceGroup().location]",
@@ -99,16 +99,16 @@
         "displayName": "graphrootsplan"
       },
       "properties": {
-        "name": "[variables('appServiceName')]",
+        "name": "[variables('appPlanName')]",
         "numberOfWorkers": 1
       }
     },
     {
-      "name": "[variables('appPlanName')]",
+      "name": "[variables('appServiceName')]",
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
       "kind": "app,linux,container",
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2016-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('appServiceName'))]"
       ],
@@ -117,14 +117,18 @@
         "displayName": "graphroots"
       },
       "properties": {
-        "name": "[variables('appPlanName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServiceName'))]",
+        "name": "[variables('appServiceName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]",
         "siteConfig": {
-          "linuxFxVersion": "DOCKER|nginx",
+          "linuxFxVersion": "DOCKER|nginx:alpine",
           "appSettings": [
             {
               "name": "WEBSITES_PORT",
               "value": "[parameters('websitePort')]"
+            },
+            {
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false"
             }
           ]
         }
