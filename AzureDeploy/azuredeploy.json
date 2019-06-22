@@ -100,12 +100,14 @@
       },
       "properties": {
         "name": "[variables('appPlanName')]",
-        "numberOfWorkers": 1
+        "numberOfWorkers": 1,
+        "reserved": true
       }
     },
     {
       "name": "[variables('appServiceName')]",
       "type": "Microsoft.Web/sites",
+      "kind": "app,linux,container",
       "apiVersion": "2018-02-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -120,6 +122,7 @@
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appPlanName'))]",
         "siteConfig": {
           "linuxFxVersion": "DOCKER|nginx",
+          "DOCKER_CUSTOM_IMAGE_NAME": "containerwebapp",
           "appSettings": [
             {
               "name": "WEBSITES_PORT",
