@@ -55,7 +55,7 @@
     }
   },
   "variables": {
-    "acrName": "[concat('environmentName', 'graphroots', 'acr')]",
+    "acrName": "[concat(parameters('environmentName'), 'graphroots', 'acr')]",
     "appPlanName": "[concat(parameters('environmentName'), 'graphroots', uniqueString(resourceGroup().id))]",
     "appServiceName": "[concat(parameters('environmentName'), 'graphroots', 'webapp')]"
   },
