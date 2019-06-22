@@ -19,6 +19,7 @@ steps:
   displayName: "Build and publish docker images"
   inputs:
     containerRegistry: $(RegistryServiceConnection)
+    repository: "graphroots"
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
 
