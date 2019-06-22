@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Graph QL as a service",
   "main": "index.js",
+  "repository": "https://dev.azure.com/roseitz/Graphroots",
   "license": "MIT",
   "scripts": {
     "tsc": "tsc",
