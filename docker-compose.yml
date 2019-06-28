@@ -3,10 +3,7 @@ services:
   redis:
     image: redis:alpine
   webapp:
-    build:
-      image: roseitzdevgraphrootsacr.azurecr.io/graphroots:${Build.BuildId}
-      args:
-        PORT: 4000
+    image: roseitzdevgraphrootsacr.azurecr.io/graphroots:${Build.BuildId}
     ports:
       - "4000:4000"
     secrets:
