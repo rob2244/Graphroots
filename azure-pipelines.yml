@@ -18,6 +18,18 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
 
+- task: Bash@3
+  inputs:
+    filePath: '$(Build.SourcesDirectory)/create-config-file.sh'
+    workingDirectory: '$(Build.SourcesDirectory)'
+
+- task: CopyFiles@2
+  displayName: "Copy Environment Config"
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '.env'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
 - task: CopyFiles@2
   displayName: "Copy deployment scripts to artifact staging"
   inputs:
