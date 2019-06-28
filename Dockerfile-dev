@@ -1,0 +1,6 @@
+FROM alpine:3.9.4 AS base
+RUN apk add --no-cache nodejs-current nodejs-npm
+WORKDIR /app
+COPY . .
+RUN npm install
+CMD npm run-script dev

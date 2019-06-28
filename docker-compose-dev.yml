@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  redis:
+    image: redis:alpine
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+      args:
+        PORT: 4000
+    secrets:
+      - source: configuration
+        target: .env
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+secrets:
+  configuration:
+    file: .env
