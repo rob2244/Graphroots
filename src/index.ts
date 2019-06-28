@@ -1,12 +1,12 @@
-import express from "express";
+import Server from "./server";
+import dotenv from "dotenv";
+import { Logger } from "@overnightjs/logger";
 
-const app = express();
-const port = 4000;
+const containerSecretPath = "/run/secrets/.env";
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+dotenv.config({ path: containerSecretPath });
+const server = new Server();
 
-app.listen(port, () => {
-  console.log(`Server listening on port: ${port}`);
-});
+const port = process.env.PORT || "4000";
+
+server.start(parseInt(port));
