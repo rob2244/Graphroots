@@ -28,8 +28,8 @@ steps:
   inputs:
     SourceFolder: '$(Build.SourcesDirectory)'
     Contents: |
-     '.env'
-     'docker-compose.yml'
+     .env
+     docker-compose.yml
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
 - task: CopyFiles@2
