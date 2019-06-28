@@ -27,7 +27,9 @@ steps:
   displayName: "Copy Environment Config"
   inputs:
     SourceFolder: '$(Build.SourcesDirectory)'
-    Contents: '.env'
+    Contents: |
+     '.env'
+     'docker-compose.yml'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
 - task: CopyFiles@2
