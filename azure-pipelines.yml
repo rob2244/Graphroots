@@ -12,11 +12,21 @@ steps:
 
 - task: Docker@2
   displayName: "Build and publish docker images"
+  enabled: "false"
   inputs:
     containerRegistry: $(RegistryServiceConnection)
     repository: "graphroots"
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
+
+- task: DockerCompose@0
+  inputs:
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'Graphroots'
+    azureContainerRegistry: '{"loginServer":"roseitzdevgraphrootsacr.azurecr.io", "id" : "/subscriptions/55df4e92-8e3b-49c8-aa81-d12780264814/resourceGroups/graphrootsrg-dev/providers/Microsoft.ContainerRegistry/registries/roseitzdevgraphrootsacr"}'
+    dockerComposeFile: '**/docker-compose.yml'
+    dockerComposeFileArgs: 'BUILD_ID=$(Build.BuildId)'
+    action: 'Run a Docker Compose command'
 
 - task: Bash@3
   inputs:
@@ -45,3 +55,4 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
+
