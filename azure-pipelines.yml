@@ -27,6 +27,7 @@ steps:
     azureContainerRegistry: '{"loginServer":"roseitzdevgraphrootsacr.azurecr.io", "id" : "/subscriptions/55df4e92-8e3b-49c8-aa81-d12780264814/resourceGroups/graphrootsrg-dev/providers/Microsoft.ContainerRegistry/registries/roseitzdevgraphrootsacr"}'
     dockerComposeFile: '**/docker-compose.yml'
     action: 'Build services'
+    dockerComposeFileArgs: 'BUILD_ID=$(Build.BuildId)'
 
 - task: DockerCompose@0
   inputs:
