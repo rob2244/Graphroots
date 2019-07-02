@@ -26,7 +26,6 @@ steps:
     azureSubscription: 'Graphroots'
     azureContainerRegistry: '{"loginServer":"roseitzdevgraphrootsacr.azurecr.io", "id" : "/subscriptions/55df4e92-8e3b-49c8-aa81-d12780264814/resourceGroups/graphrootsrg-dev/providers/Microsoft.ContainerRegistry/registries/roseitzdevgraphrootsacr"}'
     dockerComposeFile: '**/docker-compose.yml'
-    dockerComposeFileArgs: 'BUILD_ID=$(Build.BuildId)'
     action: 'Build services'
 
 - task: DockerCompose@0
@@ -35,6 +34,7 @@ steps:
     azureSubscription: 'Graphroots'
     azureContainerRegistry: '{"loginServer":"roseitzdevgraphrootsacr.azurecr.io", "id" : "/subscriptions/55df4e92-8e3b-49c8-aa81-d12780264814/resourceGroups/graphrootsrg-dev/providers/Microsoft.ContainerRegistry/registries/roseitzdevgraphrootsacr"}'
     dockerComposeFile: '**/docker-compose.yml'
+    dockerComposeFileArgs: 'BUILD_ID=$(Build.BuildId)'
     action: 'Push services'
 
 - task: Bash@3
