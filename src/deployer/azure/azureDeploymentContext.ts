@@ -1,5 +1,5 @@
 export default interface IAzureDeploymentContext {
-  clientID: string;
+  clientId: string;
   clientSecret: string;
   tenantId: string;
   subscriptionId: string;

@@ -87,22 +87,29 @@ const products = [
 ];
 
 class Order {
-  constructor(id, totalPrice, products, customerId) {
+  constructor(id, totalPrice, productIds, customerId) {
     this.id = id;
     this.totalPrice = totalPrice;
-    (this.products = products), (this.customerId = customerId);
+    this.productIds = productIds;
+    this.customerId = customerId;
   }
 
   buyer() {
     return custs.find(c => c.id === this.customerId);
   }
+
+  products() {
+    return products.filter(p => this.productIds.some(pid => pid === p.id));
+  }
 }
+
+const productIds = products.map(p => p.id);
 
 const orders = [
   new Order(
     "3f4375ec-494b-4aa7-8c24-1e3deba88458",
     100,
-    products.slice(0, 3),
+    productIds.slice(0, 3),
     "e3fbbccb-7dae-4d88-89f9-5df99713a6ee"
   ),
   new Order(
@@ -135,7 +142,9 @@ const resolvers = {
   products() {
     return products;
   },
-  productInfo() {}
+  productInfo({ productId }) {
+    return products.find(p => p.productId === productId).info;
+  }
 };
 
 module.exports = resolvers;

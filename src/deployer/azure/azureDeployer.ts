@@ -75,7 +75,7 @@ export default class AzureDeployer implements IDeployer {
   }
 
   private async getCredentials() {
-    const { clientID, clientSecret, tenantId } = this.context;
+    const { clientId: clientID, clientSecret, tenantId } = this.context;
 
     // TODO use more secure login scheme
     return await msRestNodeAuth.loginWithServicePrincipalSecret(

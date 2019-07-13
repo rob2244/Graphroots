@@ -5,9 +5,9 @@ import path from "path";
 jest.setTimeout(10000000);
 
 describe("AzureDeployer", () => {
-  it("Should sucessfully deploy resources", async () => {
+  xit("Should sucessfully deploy resources", async () => {
     const deployer = new AzureDeployer({
-      clientID: "",
+      clientId: "",
       clientSecret: "",
       location: "westus",
       resourceGroupName: "graphroots-generated",
@@ -19,9 +19,9 @@ describe("AzureDeployer", () => {
     await deployer.deployResources();
   });
 
-  it("Should successfully deploy application", async () => {
+  xit("Should successfully deploy application", async () => {
     const deployer = new AzureDeployer({
-      clientID: "",
+      clientId: "",
       clientSecret: "",
       location: "westus",
       resourceGroupName: "graphroots-generated",

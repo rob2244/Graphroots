@@ -1,5 +1,5 @@
 enum DeployerType {
-  Azure
+  Azure = "Azure"
 }
 
 export default DeployerType;

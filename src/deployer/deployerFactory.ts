@@ -14,3 +14,5 @@ export default function createDeployer(
       throw new Error(`Unrecognized deployer type: ${type}`);
   }
 }
+
+export type createDeployer = (type: DeployerType, context: any) => IDeployer;

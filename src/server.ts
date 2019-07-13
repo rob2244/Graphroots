@@ -4,6 +4,7 @@ import { Logger } from "@overnightjs/logger";
 import { UserController } from "./controllers/userController";
 import session from "express-session";
 import store from "connect-redis";
+import fileUpload from 'express-fileupload'
 
 class GraphrootsServer extends Server {
   constructor() {
@@ -27,6 +28,9 @@ class GraphrootsServer extends Server {
 
     this.app.use(bodyParser.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
+    this.app.use(fileUpload({
+      limits: { fileSize: 50 * 1024 * 1024 }
+    }))
   }
 
   private setupControllers(): void {
