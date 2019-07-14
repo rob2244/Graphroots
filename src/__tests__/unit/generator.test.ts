@@ -1,11 +1,11 @@
-import JavascriptGenerator from "../generator/javascriptGenerator";
+import JavascriptGenerator from "../../generator/javascriptGenerator";
 import { promisify } from "util";
 import { readFile } from "fs";
 import { resolve, join } from "path";
 import AdmZip from "adm-zip";
 
 const readFileAsync = promisify(readFile);
-const graphqlpath = resolve(__dirname, "../../SampleGraphQL");
+const graphqlpath = resolve(__dirname, "../../../SampleGraphQL");
 
 describe("JavascriptGenerator", () => {
   let generator: JavascriptGenerator;
@@ -15,7 +15,7 @@ describe("JavascriptGenerator", () => {
   beforeAll(async () => {
     generator = new JavascriptGenerator();
     resolvers = await readFileAsync(join(graphqlpath, "resolvers.js"), "utf-8");
-    schema = await readFileAsync(join(graphqlpath, "schema.js"), "utf-8");
+    schema = await readFileAsync(join(graphqlpath, "schema.graphql"), "utf-8");
   });
 
   it("Should correctly zip files for graphql server", () => {

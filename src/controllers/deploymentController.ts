@@ -7,7 +7,7 @@ import CodeFile from "../generator/codeFile";
 import DeployerType from "../deployer/deployerType";
 import * as validators from "./validators";
 
-@Controller("/api/v1/deployment")
+@Controller("api/v1/deployment")
 class DeploymentController {
   constructor(
     private deployerFactory: createDeployer,
@@ -19,15 +19,21 @@ class DeploymentController {
   async deploy(req: Request, res: Response) {
     const { schema, resolvers } = req.session;
 
-    if (!schema)
+    if (!schema) {
       res
         .status(BAD_REQUEST)
         .send({ error: "No graphql schema found in current session" });
 
-    if (!resolvers)
+      return;
+    }
+
+    if (!resolvers) {
       res
         .status(BAD_REQUEST)
         .send({ error: "No graphql resolvers found in current session" });
+
+      return;
+    }
 
     const deployer = this.createDeployer(req.body);
 
@@ -51,7 +57,7 @@ class DeploymentController {
 
   private createCodeFiles(schema: string, resolvers: string): CodeFile[] {
     return [
-      { filename: "schema.js", content: schema },
+      { filename: "schema.graphql", content: schema },
       { filename: "resolvers.js", content: resolvers }
     ];
   }

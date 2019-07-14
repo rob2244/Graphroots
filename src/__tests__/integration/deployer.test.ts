@@ -1,4 +1,4 @@
-import AzureDeployer from "../deployer/azure/azureDeployer";
+import AzureDeployer from "../../deployer/azure/azureDeployer";
 import AdmZip from "adm-zip";
 import path from "path";
 

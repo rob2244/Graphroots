@@ -27,7 +27,6 @@ export default class AzureDeployer implements IDeployer {
 
     const rgClient = new ResourceManagementClient(creds, subscriptionId);
 
-    // TODO give better download reporting
     return await rgClient.resourceGroups.createOrUpdate(resourceGroupName, {
       location
     });
@@ -39,7 +38,14 @@ export default class AzureDeployer implements IDeployer {
     return await client.webApps.createOrUpdate(resourceGroupName, webAppName, {
       location,
       // Required due to api bug
-      serverFarmId: ""
+      serverFarmId: "",
+      siteConfig: {
+        // Sets Kudu to do npm install during zip deploy
+        appSettings: [
+          { name: "SCM_DO_BUILD_DURING_DEPLOYMENT", value: "true" },
+          { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "10.15.2" }
+        ]
+      }
     });
   }
 
@@ -62,7 +68,6 @@ export default class AzureDeployer implements IDeployer {
       webAppName
     );
 
-    // TODO better way of handling creds
     const publishingCreds = Buffer.from(
       `${publishingUserName}:${publishingPassword}`
     ).toString("base64");
@@ -77,7 +82,6 @@ export default class AzureDeployer implements IDeployer {
   private async getCredentials() {
     const { clientId: clientID, clientSecret, tenantId } = this.context;
 
-    // TODO use more secure login scheme
     return await msRestNodeAuth.loginWithServicePrincipalSecret(
       clientID,
       clientSecret,

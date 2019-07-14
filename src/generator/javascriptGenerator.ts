@@ -9,8 +9,6 @@ export default class JavascriptGenerator implements IGenerator {
 
     zipper.addLocalFolder(path.resolve(__dirname, "../templates/javascript"));
 
-    // TODO figure out how to install npm packages
-
     for (const { filename, content } of code)
       zipper.addFile(filename, Buffer.alloc(content.length, content));
 
