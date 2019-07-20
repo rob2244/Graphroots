@@ -13,6 +13,7 @@ RUN npm run-script build
 
 FROM base as release
 COPY --from=build /app/dist .
+COPY --from=build /app/src/templates ./templates
 COPY --from=build /app/prod_node_modules ./node_modules
 ARG PORT=4000
 EXPOSE ${PORT}
