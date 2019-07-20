@@ -17,10 +17,6 @@ app.use(
 
 const port = process.env.PORT || 4000;
 
-app.get("/", (req, res) => {
-  res.send("<h1>Hello World</h1>");
-});
-
 app.listen(port, () => {
   console.log(`Running a GraphQL API server on port ${port}`);
 });

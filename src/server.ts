@@ -46,6 +46,10 @@ class GraphrootsServer extends Server {
         limits: { fileSize: 50 * 1024 * 1024 }
       })
     );
+
+    this.app.get("/", (req, res) => {
+      res.send("<h1>Hello World</h1>");
+    });
   }
 
   private setupControllers(): void {
