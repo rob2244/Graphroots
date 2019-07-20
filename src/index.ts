@@ -1,6 +1,5 @@
 import Server from "./server";
 import dotenv from "dotenv";
-import { Logger } from "@overnightjs/logger";
 
 const containerSecretPath = "/run/secrets/.env";
 
