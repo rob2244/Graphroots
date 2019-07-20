@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   redis:
-    image: redis:alpine
+    image: roseitzdevgraphrootsacr.azurecr.io/redis:alpine
   webapp:
     image: roseitzdevgraphrootsacr.azurecr.io/graphroots:#{Build.BuildId}#
     ports:
