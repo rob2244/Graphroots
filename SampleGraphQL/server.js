@@ -1,5 +1,7 @@
 const express = require("express");
 const resolvers = require("./resolvers");
+const customerResolver = require("./customerResolver");
+const productResolver = require("./productResolver");
 const graphqlHTTP = require("express-graphql");
 const { buildSchema } = require("graphql");
 const fs = require("fs");
@@ -12,7 +14,11 @@ app.use(
   "/graphql",
   graphqlHTTP({
     schema: buildSchema(schema),
-    rootValue: resolvers
+    rootValue: {
+      ...resolvers,
+      ...customerResolver,
+      ...productResolver
+    }
   })
 );
 

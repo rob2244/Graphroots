@@ -4,28 +4,38 @@ import { OK, BAD_REQUEST } from "http-status-codes";
 import { UploadedFile } from "express-fileupload";
 import * as validators from "../controllers/validators";
 import { buildSchema } from "graphql";
+import FileType from "../generator/fileType";
 
 @Controller("api/v1/graphql")
 class GraphQLController {
   @Post("resolvers")
-  @Middleware(validators.fileValidator("resolvers", [".js"]))
+  @Middleware(validators.fileValidator(["*"], [".js"]))
   resolvers(req: Request, res: Response) {
-    const { data } = req.files.resolvers as UploadedFile;
-    req.session.resolvers = data.toString("utf-8");
+    for (const file in req.files) {
+      let { data, name } = req.files[file] as UploadedFile;
+      const resolver = {
+        filename: name,
+        content: data.toString("utf-8"),
+        type: FileType.Resolver
+      };
+
+      const keyName = /resolver(s?)/i.test(name) ? file : file + "Resolver";
+      req.session[keyName] = JSON.stringify(resolver);
+    }
+
     res.sendStatus(OK);
   }
 
   @Post("dependencies")
-  @Middleware(validators.fileValidator("package", [".json"]))
+  @Middleware(validators.fileValidator(["package"], [".json"]))
   dependencies(req: Request, res: Response) {
     const { data } = req.files.package as UploadedFile;
     req.session.resolvers = data.toString("utf-8");
     res.sendStatus(OK);
   }
 
-
   @Post("schema")
-  @Middleware(validators.fileValidator("schema", [".graphql"]))
+  @Middleware(validators.fileValidator(["schema"], [".graphql"]))
   schema(req: Request, res: Response) {
     const { data } = req.files.schema as UploadedFile;
     const schema = data.toString("utf-8");

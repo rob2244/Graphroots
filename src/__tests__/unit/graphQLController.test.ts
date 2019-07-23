@@ -18,7 +18,7 @@ describe("GraphQLController Unit Tests", () => {
 
     const req: any = {
       files: {
-        resolvers: { data: testBuffer }
+        resolvers: { data: testBuffer, name: "resolvers.js" }
       },
       session: {}
     };
@@ -27,7 +27,38 @@ describe("GraphQLController Unit Tests", () => {
 
     controller.resolvers(req, res);
 
-    expect(req.session.resolvers).toBe("Test Buffer");
+    const resolver = JSON.parse(req.session["resolvers"]).content;
+
+    expect(resolver).toBe("Test Buffer");
+    expect(res.sendStatus).toHaveBeenCalledWith(OK);
+  });
+
+  it(`should correctly save multiple buffers to the redis store 
+      when multiple resolver files are sent`, () => {
+    const testBuffer1 = Buffer.from("Test Buffer 1");
+    const testBuffer2 = Buffer.from("Test Buffer 2");
+    const testBuffer3 = Buffer.from("Test Buffer 3");
+
+    const req: any = {
+      files: {
+        resolver1: { data: testBuffer1, name: "resolvers1.js" },
+        resolver2: { data: testBuffer2, name: "resolvers2.js" },
+        resolver3: { data: testBuffer3, name: "resolvers3.js" }
+      },
+      session: {}
+    };
+
+    const res: any = { sendStatus: jest.fn() };
+
+    controller.resolvers(req, res);
+
+    const result1 = JSON.parse(req.session["resolver1"]).content;
+    const result2 = JSON.parse(req.session["resolver2"]).content;
+    const result3 = JSON.parse(req.session["resolver3"]).content;
+
+    expect(result1).toBe("Test Buffer 1");
+    expect(result2).toBe("Test Buffer 2");
+    expect(result3).toBe("Test Buffer 3");
     expect(res.sendStatus).toHaveBeenCalledWith(OK);
   });
 

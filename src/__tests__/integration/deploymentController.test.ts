@@ -1,6 +1,7 @@
 import GraphrootsServer from "../../server";
 import { resolve, join } from "path";
 import request from "supertest";
+import DeployerType from "../../deployer/deployerType";
 
 describe("Deployment controller integration tests", () => {
   let server: GraphrootsServer;
@@ -12,7 +13,8 @@ describe("Deployment controller integration tests", () => {
     subscriptionId: "dc783225-30bc-4727-bf07-13b1f6ef10bb",
     location: "us west",
     resourceGroupName: "graphroots",
-    webAppName: "graphroots"
+    webAppName: "graphroots",
+    cloudType: DeployerType.Azure
   };
 
   beforeAll(() => {

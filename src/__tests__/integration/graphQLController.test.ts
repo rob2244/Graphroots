@@ -15,9 +15,7 @@ describe("GraphQLController Integration Tests", () => {
       .post("/api/v1/graphql/resolvers")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
-      .expect(res =>
-        expect(res.body.errors).toBe("resolvers file required but not found")
-      )
+      .expect(res => expect(res.body.errors).toBe("No files uploaded"))
       .expect(400);
   });
 
@@ -26,6 +24,17 @@ describe("GraphQLController Integration Tests", () => {
     await request(server.app)
       .post("/api/v1/graphql/resolvers")
       .attach("resolvers", join(graphqlpath, "resolvers.js"))
+      .set("Accept", "application/json")
+      .expect(200);
+  });
+
+  it(`Should successfully save multiple resolver files 
+      to the session when one is posted`, async () => {
+    await request(server.app)
+      .post("/api/v1/graphql/resolvers")
+      .attach("resolvers", join(graphqlpath, "resolvers.js"))
+      .attach("customerResolver", join(graphqlpath, "customerResolver.js"))
+      .attach("productResolver", join(graphqlpath, "productResolver.js"))
       .set("Accept", "application/json")
       .expect(200);
   });
@@ -49,9 +58,7 @@ describe("GraphQLController Integration Tests", () => {
       .post("/api/v1/graphql/schema")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
-      .expect(res =>
-        expect(res.body.errors).toBe("schema file required but not found")
-      )
+      .expect(res => expect(res.body.errors).toBe("No files uploaded"))
       .expect(400);
   });
 

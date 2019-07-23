@@ -6,6 +6,7 @@ import IGenerator from "../generator/generator";
 import CodeFile from "../generator/codeFile";
 import DeployerType from "../deployer/deployerType";
 import * as validators from "./validators";
+import FileType from "../generator/fileType";
 
 @Controller("api/v1/deployment")
 class DeploymentController {
@@ -17,7 +18,7 @@ class DeploymentController {
   @Post()
   @Middleware(validators.azureDeploymentValidation)
   async deploy(req: Request, res: Response) {
-    const { schema, resolvers } = req.session;
+    const { schema } = req.session;
 
     if (!schema) {
       res
@@ -27,7 +28,9 @@ class DeploymentController {
       return;
     }
 
-    if (!resolvers) {
+    const resolvers = this.getResolversFromSession(req.session);
+
+    if (resolvers.length === 0) {
       res
         .status(BAD_REQUEST)
         .send({ error: "No graphql resolvers found in current session" });
@@ -40,12 +43,18 @@ class DeploymentController {
     const codeFiles = this.createCodeFiles(schema, resolvers);
 
     const { generator } = this;
-    const files = generator.generate(codeFiles);
+
+    const files = await generator.generate(codeFiles);
 
     await deployer.deployResources();
     await deployer.deployApplication(files);
 
     res.sendStatus(CREATED);
+  }
+
+  private getResolversFromSession(session: Express.Session): CodeFile[] {
+    const keys = Object.keys(session).filter(k => /resolver(s?)/i.test(k));
+    return keys.map(k => JSON.parse(session[k]));
   }
 
   private createDeployer(requestBody: { [key: string]: string }) {
@@ -55,10 +64,14 @@ class DeploymentController {
     return deployerFactory(cloudType as DeployerType, ctx);
   }
 
-  private createCodeFiles(schema: string, resolvers: string): CodeFile[] {
+  private createCodeFiles(schema: string, resolvers: CodeFile[]): CodeFile[] {
     return [
-      { filename: "schema.graphql", content: schema },
-      { filename: "resolvers.js", content: resolvers }
+      {
+        filename: "schema.graphql",
+        content: schema,
+        type: FileType.Schema
+      },
+      ...resolvers
     ];
   }
 }
