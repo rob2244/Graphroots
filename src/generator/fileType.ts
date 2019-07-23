@@ -1,6 +1,7 @@
 enum FileType {
   Resolver = "Resolver",
-  Schema = "Schema"
+  Schema = "Schema",
+  Dependecy = "Dependecy"
 }
 
 export default FileType;

@@ -5,6 +5,7 @@ import { UploadedFile } from "express-fileupload";
 import * as validators from "../controllers/validators";
 import { buildSchema } from "graphql";
 import FileType from "../generator/fileType";
+import CodeFile from "../generator/codeFile";
 
 @Controller("api/v1/graphql")
 class GraphQLController {
@@ -13,14 +14,15 @@ class GraphQLController {
   resolvers(req: Request, res: Response) {
     for (const file in req.files) {
       let { data, name } = req.files[file] as UploadedFile;
-      const resolver = {
+
+      const resolver: CodeFile = {
         filename: name,
         content: data.toString("utf-8"),
         type: FileType.Resolver
       };
 
       const keyName = /resolver(s?)/i.test(name) ? file : file + "Resolver";
-      req.session[keyName] = JSON.stringify(resolver);
+      req.session[keyName] = resolver;
     }
 
     res.sendStatus(OK);
@@ -29,22 +31,35 @@ class GraphQLController {
   @Post("dependencies")
   @Middleware(validators.fileValidator(["package"], [".json"]))
   dependencies(req: Request, res: Response) {
-    const { data } = req.files.package as UploadedFile;
-    req.session.resolvers = data.toString("utf-8");
+    const { data, name } = req.files.package as UploadedFile;
+
+    const dependency: CodeFile = {
+      filename: name,
+      content: data.toString("utf-8"),
+      type: FileType.Dependecy
+    };
+
+    req.session.dependency = dependency;
     res.sendStatus(OK);
   }
 
   @Post("schema")
   @Middleware(validators.fileValidator(["schema"], [".graphql"]))
   schema(req: Request, res: Response) {
-    const { data } = req.files.schema as UploadedFile;
-    const schema = data.toString("utf-8");
+    const { data, name } = req.files.schema as UploadedFile;
+    const content = data.toString("utf-8");
 
-    const errors = this.validateSchema(schema);
+    const errors = this.validateSchema(content);
     if (errors) {
       res.status(BAD_REQUEST).json({ errors });
       return;
     }
+
+    const schema: CodeFile = {
+      filename: name,
+      content,
+      type: FileType.Schema
+    };
 
     req.session.schema = schema;
     res.sendStatus(OK);

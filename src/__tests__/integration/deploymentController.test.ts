@@ -81,4 +81,29 @@ describe("Deployment controller integration tests", () => {
       .set("Accept", "application/json")
       .expect(201);
   });
+
+  it(`should sucessfully zip and deploy resources with an added 
+      package.json and multiple resolvers`, async () => {
+    const agent = request.agent(server.app);
+
+    await agent
+      .post("/api/v1/graphql/schema")
+      .attach("schema", join(graphqlpath, "schema.graphql"));
+
+    await agent
+      .post("/api/v1/graphql/resolvers")
+      .attach("resolvers", join(graphqlpath, "resolvers.js"))
+      .attach("productResolver", join(graphqlpath, "productResolver.js"))
+      .attach("customerResolver", join(graphqlpath, "customerResolver.js"));
+
+    await agent
+      .post("/api/v1/graphql/dependencies")
+      .attach("package", join(graphqlpath, "package.json"));
+
+    await agent
+      .post("/api/v1/deployment")
+      .send(payload)
+      .set("Accept", "application/json")
+      .expect(201);
+  });
 });

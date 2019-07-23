@@ -14,23 +14,25 @@ export default class JavascriptGenerator implements IGenerator {
   async generate(code: CodeFile[]) {
     const zipper = new AdmZip();
 
-    const template = await this.renderTemplate(code);
+    const template = await this.renderIndexTemplate(code);
     zipper.addFile("index.js", Buffer.alloc(template.length, template));
 
-    zipper.addLocalFolder(
-      path.resolve(__dirname, "../templates/javascript"),
-      null,
-      /.*\.json/
+    const pkg = await this.createPackageJSON(code);
+    zipper.addFile("package.json", Buffer.alloc(pkg.length, pkg));
+
+    zipper.addLocalFile(
+      path.resolve(__dirname, "../templates/javascript/package-lock.json")
     );
 
-    for (const { filename, content } of code) {
+    for (const { filename, content, type } of code) {
+      if (type === FileType.Dependecy) continue;
       zipper.addFile(filename, Buffer.alloc(content.length, content));
     }
 
     return zipper.toBuffer();
   }
 
-  private async renderTemplate(code: CodeFile[]) {
+  private async renderIndexTemplate(code: CodeFile[]) {
     const template = await readFileAsync(
       path.resolve(__dirname, "../templates/javascript/index.js"),
       "utf-8"
@@ -43,5 +45,25 @@ export default class JavascriptGenerator implements IGenerator {
         return basename(this.filename, ".js");
       }
     });
+  }
+
+  private async createPackageJSON(code: CodeFile[]) {
+    const template = await readFileAsync(
+      path.resolve(__dirname, "../templates/javascript/package.json"),
+      "utf-8"
+    );
+
+    const deps = code.find(c => c.type === FileType.Dependecy);
+    if (!deps) return template;
+
+    const templateJSON = JSON.parse(template);
+    const packageJSON = JSON.parse(deps.content);
+
+    const dependencies = {
+      ...templateJSON.dependencies,
+      ...packageJSON.dependencies
+    };
+
+    return JSON.stringify({ ...templateJSON, dependencies });
   }
 }

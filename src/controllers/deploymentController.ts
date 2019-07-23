@@ -18,7 +18,7 @@ class DeploymentController {
   @Post()
   @Middleware(validators.azureDeploymentValidation)
   async deploy(req: Request, res: Response) {
-    const { schema } = req.session;
+    const { schema, dependency = null } = req.session;
 
     if (!schema) {
       res
@@ -40,7 +40,7 @@ class DeploymentController {
 
     const deployer = this.createDeployer(req.body);
 
-    const codeFiles = this.createCodeFiles(schema, resolvers);
+    const codeFiles = this.createCodeFiles(schema, resolvers, dependency);
 
     const { generator } = this;
 
@@ -54,7 +54,7 @@ class DeploymentController {
 
   private getResolversFromSession(session: Express.Session): CodeFile[] {
     const keys = Object.keys(session).filter(k => /resolver(s?)/i.test(k));
-    return keys.map(k => JSON.parse(session[k]));
+    return keys.map(k => session[k]);
   }
 
   private createDeployer(requestBody: { [key: string]: string }) {
@@ -64,15 +64,18 @@ class DeploymentController {
     return deployerFactory(cloudType as DeployerType, ctx);
   }
 
-  private createCodeFiles(schema: string, resolvers: CodeFile[]): CodeFile[] {
-    return [
-      {
-        filename: "schema.graphql",
-        content: schema,
-        type: FileType.Schema
-      },
-      ...resolvers
-    ];
+  private createCodeFiles(
+    schema: CodeFile,
+    resolvers: CodeFile[],
+    dependency: CodeFile | null
+  ): CodeFile[] {
+    const files = [schema, ...resolvers];
+
+    if (dependency) {
+      files.push(dependency);
+    }
+
+    return files;
   }
 }
 

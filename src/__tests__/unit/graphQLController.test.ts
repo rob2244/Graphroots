@@ -27,7 +27,7 @@ describe("GraphQLController Unit Tests", () => {
 
     controller.resolvers(req, res);
 
-    const resolver = JSON.parse(req.session["resolvers"]).content;
+    const resolver = req.session["resolvers"].content;
 
     expect(resolver).toBe("Test Buffer");
     expect(res.sendStatus).toHaveBeenCalledWith(OK);
@@ -52,9 +52,9 @@ describe("GraphQLController Unit Tests", () => {
 
     controller.resolvers(req, res);
 
-    const result1 = JSON.parse(req.session["resolver1"]).content;
-    const result2 = JSON.parse(req.session["resolver2"]).content;
-    const result3 = JSON.parse(req.session["resolver3"]).content;
+    const result1 = req.session["resolver1"].content;
+    const result2 = req.session["resolver2"].content;
+    const result3 = req.session["resolver3"].content;
 
     expect(result1).toBe("Test Buffer 1");
     expect(result2).toBe("Test Buffer 2");
@@ -70,7 +70,7 @@ describe("GraphQLController Unit Tests", () => {
 
     const req: any = {
       files: {
-        schema: { data: schema }
+        schema: { data: schema, name: "schema.graphql" }
       },
       session: {}
     };
@@ -82,7 +82,7 @@ describe("GraphQLController Unit Tests", () => {
 
     controller.schema(req, res);
 
-    expect(req.session.schema).toBe(schema.toString("utf-8"));
+    expect(req.session.schema.content).toBe(schema.toString("utf-8"));
     expect(res.sendStatus).toHaveBeenCalledWith(OK);
   });
 
