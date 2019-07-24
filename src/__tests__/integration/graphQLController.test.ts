@@ -62,7 +62,7 @@ describe("GraphQLController Integration Tests", () => {
       .expect(400);
   });
 
-  it(`Should successfully save a schema file 
+  it(`Should successfully save a schema file in grpahql sdl notation 
       to the session when one is posted`, async () => {
     await request(server.app)
       .post("/api/v1/graphql/schema")
@@ -71,15 +71,24 @@ describe("GraphQLController Integration Tests", () => {
       .expect(200);
   });
 
+  it(`Should successfully save a schema file in graphql object notation
+      to the session when one is posted`, async () => {
+    await request(server.app)
+      .post("/api/v1/graphql/schema")
+      .attach("schema", join(graphqlpath, "schema.js"))
+      .set("Accept", "application/json")
+      .expect(200);
+  });
+
   it(`Should return an error when a file
       with an invalid extension is posted to /schema`, async () => {
     await request(server.app)
       .post("/api/v1/graphql/schema")
-      .attach("schema", join(graphqlpath, "resolvers.js"))
+      .attach("schema", join(graphqlpath, "package.json"))
       .set("Accept", "application/json")
       .expect(res =>
         expect(res.body.errors).toBe(
-          "Invalid file extension, only files with the following extensions accepted: .graphql"
+          "Invalid file extension, only files with the following extensions accepted: .graphql, .js"
         )
       )
       .expect(400);

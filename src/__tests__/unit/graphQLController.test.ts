@@ -90,7 +90,7 @@ describe("GraphQLController Unit Tests", () => {
       errors on an invalid graph ql schema`, () => {
     const req: any = {
       files: {
-        schema: { data: Buffer.from("invalid schema") }
+        schema: { data: Buffer.from("invalid schema"), name: "schema.graphql" }
       },
       session: { save: jest.fn() }
     };

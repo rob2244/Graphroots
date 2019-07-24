@@ -1,5 +1,5 @@
 import AdmZip from "adm-zip";
-import path from "path";
+import path, { extname } from "path";
 import IGenerator from "./generator";
 import CodeFile from "./codeFile";
 import { promisify } from "util";
@@ -14,7 +14,11 @@ export default class JavascriptGenerator implements IGenerator {
   async generate(code: CodeFile[]) {
     const zipper = new AdmZip();
 
-    const template = await this.renderIndexTemplate(code);
+    const isGQLSchemaLanguage =
+      extname(code.find(c => c.type === FileType.Schema).filename) ===
+      ".graphql";
+
+    const template = await this.renderIndexTemplate(code, isGQLSchemaLanguage);
     zipper.addFile("index.js", Buffer.alloc(template.length, template));
 
     const pkg = await this.createPackageJSON(code);
@@ -32,7 +36,10 @@ export default class JavascriptGenerator implements IGenerator {
     return zipper.toBuffer();
   }
 
-  private async renderIndexTemplate(code: CodeFile[]) {
+  private async renderIndexTemplate(
+    code: CodeFile[],
+    isGQLSchemaLanguage: boolean
+  ) {
     const template = await readFileAsync(
       path.resolve(__dirname, "../templates/javascript/index.js"),
       "utf-8"
@@ -43,7 +50,8 @@ export default class JavascriptGenerator implements IGenerator {
       resolvers,
       trimExt() {
         return basename(this.filename, ".js");
-      }
+      },
+      isGQLSchemaLanguage
     });
   }
 

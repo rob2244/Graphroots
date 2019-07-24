@@ -3,9 +3,10 @@ import { Request, Response } from "express";
 import { OK, BAD_REQUEST } from "http-status-codes";
 import { UploadedFile } from "express-fileupload";
 import * as validators from "../controllers/validators";
-import { buildSchema } from "graphql";
+import { buildSchema, validateSchema } from "graphql";
 import FileType from "../generator/fileType";
 import CodeFile from "../generator/codeFile";
+import { extname } from "path";
 
 @Controller("api/v1/graphql")
 class GraphQLController {
@@ -44,15 +45,18 @@ class GraphQLController {
   }
 
   @Post("schema")
-  @Middleware(validators.fileValidator(["schema"], [".graphql"]))
+  @Middleware(validators.fileValidator(["schema"], [".graphql", ".js"]))
   schema(req: Request, res: Response) {
     const { data, name } = req.files.schema as UploadedFile;
     const content = data.toString("utf-8");
 
-    const errors = this.validateSchema(content);
-    if (errors) {
-      res.status(BAD_REQUEST).json({ errors });
-      return;
+    // TODO add validation fro .js schema
+    if (extname(name) === ".graphql") {
+      const errors = this.validateSchema(content);
+      if (errors) {
+        res.status(BAD_REQUEST).json({ errors });
+        return;
+      }
     }
 
     const schema: CodeFile = {
