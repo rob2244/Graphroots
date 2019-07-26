@@ -9,6 +9,7 @@ import GraphQLController from "./controllers/graphQLController";
 import createDeployer from "./deployer/deployerFactory";
 import JavascriptGenerator from "./generator/javascriptGenerator";
 import { Application } from "express";
+import InfoController from "./controllers/infoController";
 
 class GraphrootsServer extends Server {
   constructor() {
@@ -62,8 +63,10 @@ class GraphrootsServer extends Server {
       new JavascriptGenerator()
     );
 
+    const info = new InfoController();
+
     const graphQL = new GraphQLController();
-    super.addControllers([deployment, graphQL]);
+    super.addControllers([deployment, graphQL, info]);
   }
 
   start(port: number): void {

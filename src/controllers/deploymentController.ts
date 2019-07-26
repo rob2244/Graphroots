@@ -6,7 +6,7 @@ import IGenerator from "../generator/generator";
 import CodeFile from "../generator/codeFile";
 import DeployerType from "../deployer/deployerType";
 import * as validators from "./validators";
-import { Logger } from "@overnightjs/logger";
+import { getResolversFromProject } from "../util/util";
 
 @Controller("api/v1/deployment")
 class DeploymentController {
@@ -38,7 +38,7 @@ class DeploymentController {
       return;
     }
 
-    const resolvers = this.getResolversFromSession(req.session[project]);
+    const resolvers = getResolversFromProject(req.session[project]);
 
     if (resolvers.length === 0) {
       res
@@ -60,11 +60,6 @@ class DeploymentController {
     await deployer.deployApplication(files);
 
     res.sendStatus(CREATED);
-  }
-
-  private getResolversFromSession(session: { [key: string]: any }): CodeFile[] {
-    const keys = Object.keys(session).filter(k => /resolver(s?)/i.test(k));
-    return keys.map(k => session[k]);
   }
 
   private createDeployer(requestBody: { [key: string]: string }) {

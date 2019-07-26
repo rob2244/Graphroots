@@ -8,7 +8,6 @@ import FileType from "../generator/fileType";
 import CodeFile from "../generator/codeFile";
 import { extname } from "path";
 import { createProjectIfNotExists } from "../util/util";
-import { Logger } from "@overnightjs/logger";
 
 @Controller("api/v1/graphql")
 class GraphQLController {
