@@ -12,7 +12,7 @@ describe("GraphQLController Integration Tests", () => {
 
   it(`should return a bad request when no resolver file is uploaded`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/resolvers")
+      .post("/api/v1/graphql/proj1/resolvers")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(res => expect(res.body.errors).toBe("No files uploaded"))
@@ -22,7 +22,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should successfully save a resolvers file 
       to the session when one is posted`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/resolvers")
+      .post("/api/v1/graphql/proj1/resolvers")
       .attach("resolvers", join(graphqlpath, "resolvers.js"))
       .set("Accept", "application/json")
       .expect(200);
@@ -31,7 +31,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should successfully save multiple resolver files 
       to the session when one is posted`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/resolvers")
+      .post("/api/v1/graphql/proj1/resolvers")
       .attach("resolvers", join(graphqlpath, "resolvers.js"))
       .attach("customerResolver", join(graphqlpath, "customerResolver.js"))
       .attach("productResolver", join(graphqlpath, "productResolver.js"))
@@ -42,7 +42,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should return an error when a file
       with an invalid extension is posted to /resolvers`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/resolvers")
+      .post("/api/v1/graphql/proj1/resolvers")
       .attach("resolvers", join(graphqlpath, "schema.graphql"))
       .set("Accept", "application/json")
       .expect(res =>
@@ -55,7 +55,7 @@ describe("GraphQLController Integration Tests", () => {
 
   it(`should return a bad request when no schema file is uploaded`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/schema")
+      .post("/api/v1/graphql/proj1/schema")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(res => expect(res.body.errors).toBe("No files uploaded"))
@@ -65,7 +65,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should successfully save a schema file in grpahql sdl notation 
       to the session when one is posted`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/schema")
+      .post("/api/v1/graphql/proj1/schema")
       .attach("schema", join(graphqlpath, "schema.graphql"))
       .set("Accept", "application/json")
       .expect(200);
@@ -74,7 +74,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should successfully save a schema file in graphql object notation
       to the session when one is posted`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/schema")
+      .post("/api/v1/graphql/proj1/schema")
       .attach("schema", join(graphqlpath, "schema.js"))
       .set("Accept", "application/json")
       .expect(200);
@@ -83,7 +83,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should return an error when a file
       with an invalid extension is posted to /schema`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/schema")
+      .post("/api/v1/graphql/proj1/schema")
       .attach("schema", join(graphqlpath, "package.json"))
       .set("Accept", "application/json")
       .expect(res =>
@@ -97,7 +97,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should successfully save a package.json file 
       to the session when one is posted`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/dependencies")
+      .post("/api/v1/graphql/proj1/dependencies")
       .attach("package", join(graphqlpath, "package.json"))
       .set("Accept", "application/json")
       .expect(200);
@@ -106,7 +106,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should return an error when a file
       with an invalid extension is posted to /dependencies`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/dependencies")
+      .post("/api/v1/graphql/proj1/dependencies")
       .attach("package", join(graphqlpath, "resolvers.js"))
       .set("Accept", "application/json")
       .expect(res =>
@@ -120,7 +120,7 @@ describe("GraphQLController Integration Tests", () => {
   it(`Should return an error when a file
       with an invalid name is posted to /dependencies`, async () => {
     await request(server.app)
-      .post("/api/v1/graphql/dependencies")
+      .post("/api/v1/graphql/proj1/dependencies")
       .attach("resolver", join(graphqlpath, "package.json"))
       .set("Accept", "application/json")
       .expect(res =>

@@ -6,7 +6,7 @@ import IGenerator from "../generator/generator";
 import CodeFile from "../generator/codeFile";
 import DeployerType from "../deployer/deployerType";
 import * as validators from "./validators";
-import FileType from "../generator/fileType";
+import { Logger } from "@overnightjs/logger";
 
 @Controller("api/v1/deployment")
 class DeploymentController {
@@ -15,10 +15,20 @@ class DeploymentController {
     private generator: IGenerator
   ) {}
 
-  @Post()
+  @Post(":project")
   @Middleware(validators.azureDeploymentValidation)
   async deploy(req: Request, res: Response) {
-    const { schema, dependency = null } = req.session;
+    const { project } = req.params;
+
+    if (!req.session[project]) {
+      res.status(BAD_REQUEST).send({
+        error: `No project with name ${project} found in current session`
+      });
+
+      return;
+    }
+
+    const { schema, dependency = null } = req.session[project];
 
     if (!schema) {
       res
@@ -28,7 +38,7 @@ class DeploymentController {
       return;
     }
 
-    const resolvers = this.getResolversFromSession(req.session);
+    const resolvers = this.getResolversFromSession(req.session[project]);
 
     if (resolvers.length === 0) {
       res
@@ -52,7 +62,7 @@ class DeploymentController {
     res.sendStatus(CREATED);
   }
 
-  private getResolversFromSession(session: Express.Session): CodeFile[] {
+  private getResolversFromSession(session: { [key: string]: any }): CodeFile[] {
     const keys = Object.keys(session).filter(k => /resolver(s?)/i.test(k));
     return keys.map(k => session[k]);
   }
