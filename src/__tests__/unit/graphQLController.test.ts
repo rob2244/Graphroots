@@ -18,16 +18,49 @@ describe("GraphQLController Unit Tests", () => {
 
     const req: any = {
       files: {
-        resolvers: { data: testBuffer }
+        resolvers: { data: testBuffer, name: "resolvers.js" }
       },
-      session: {}
+      session: {},
+      params: { project: "proj1" }
     };
 
     const res: any = { sendStatus: jest.fn() };
 
     controller.resolvers(req, res);
 
-    expect(req.session.resolvers).toBe("Test Buffer");
+    const resolver = req.session[req.params.project].resolvers.content;
+
+    expect(resolver).toBe("Test Buffer");
+    expect(res.sendStatus).toHaveBeenCalledWith(OK);
+  });
+
+  it(`should correctly save multiple buffers to the redis store 
+      when multiple resolver files are sent`, () => {
+    const testBuffer1 = Buffer.from("Test Buffer 1");
+    const testBuffer2 = Buffer.from("Test Buffer 2");
+    const testBuffer3 = Buffer.from("Test Buffer 3");
+
+    const req: any = {
+      files: {
+        resolver1: { data: testBuffer1, name: "resolvers1.js" },
+        resolver2: { data: testBuffer2, name: "resolvers2.js" },
+        resolver3: { data: testBuffer3, name: "resolvers3.js" }
+      },
+      session: {},
+      params: { project: "proj1" }
+    };
+
+    const res: any = { sendStatus: jest.fn() };
+
+    controller.resolvers(req, res);
+
+    const result1 = req.session[req.params.project].resolver1.content;
+    const result2 = req.session[req.params.project].resolver2.content;
+    const result3 = req.session[req.params.project].resolver3.content;
+
+    expect(result1).toBe("Test Buffer 1");
+    expect(result2).toBe("Test Buffer 2");
+    expect(result3).toBe("Test Buffer 3");
     expect(res.sendStatus).toHaveBeenCalledWith(OK);
   });
 
@@ -39,9 +72,10 @@ describe("GraphQLController Unit Tests", () => {
 
     const req: any = {
       files: {
-        schema: { data: schema }
+        schema: { data: schema, name: "schema.graphql" }
       },
-      session: {}
+      session: {},
+      params: { project: "proj1" }
     };
 
     const res: any = {
@@ -51,7 +85,9 @@ describe("GraphQLController Unit Tests", () => {
 
     controller.schema(req, res);
 
-    expect(req.session.schema).toBe(schema.toString("utf-8"));
+    expect(req.session[req.params.project].schema.content).toBe(
+      schema.toString("utf-8")
+    );
     expect(res.sendStatus).toHaveBeenCalledWith(OK);
   });
 
@@ -59,9 +95,10 @@ describe("GraphQLController Unit Tests", () => {
       errors on an invalid graph ql schema`, () => {
     const req: any = {
       files: {
-        schema: { data: Buffer.from("invalid schema") }
+        schema: { data: Buffer.from("invalid schema"), name: "schema.graphql" }
       },
-      session: { save: jest.fn() }
+      session: { save: jest.fn() },
+      params: { project: "proj1" }
     };
 
     const errorFunc = jest.fn();

@@ -5,6 +5,11 @@ Array [
   Object {
     "location": "body",
     "msg": "Invalid value",
+    "param": "cloudType",
+  },
+  Object {
+    "location": "body",
+    "msg": "Invalid value",
     "param": "clientId",
   },
   Object {
@@ -36,6 +41,11 @@ Array [
     "location": "body",
     "msg": "Invalid value",
     "param": "webAppName",
+  },
+  Object {
+    "location": "body",
+    "msg": "Invalid value",
+    "param": "cloudType",
   },
   Object {
     "location": "body",

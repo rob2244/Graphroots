@@ -33,30 +33,39 @@ export const azureDeploymentValidation: RequestHandler = async (
 };
 
 export const fileValidator = (
-  fileName: string,
+  fileNames = ["*"],
   acceptedExtensions = ["*"]
 ): RequestHandler => {
   return (req, res, next) => {
-    if (!req.files || !req.files[fileName]) {
-      res
-        .status(BAD_REQUEST)
-        .json({ errors: `${fileName} file required but not found` });
-
+    if (!req.files) {
+      res.status(BAD_REQUEST).json({ errors: `No files uploaded` });
       return;
     }
 
-    const { name } = req.files[fileName] as UploadedFile;
+    for (const file in req.files) {
+      if (!fileNames.includes(file) && !fileNames.includes("*")) {
+        res.status(BAD_REQUEST).json({
+          errors: `Expected the following files: ${fileNames.join(
+            ","
+          )}, but they were not found`
+        });
 
-    if (!hasValidExtension(acceptedExtensions, name)) {
-      const msg = `Invalid file extension, only files with the following extensions accepted: ${acceptedExtensions.join(
-        ", "
-      )}`;
+        return;
+      }
 
-      res.status(BAD_REQUEST).json({
-        errors: msg
-      });
+      const { name } = req.files[file] as UploadedFile;
 
-      return;
+      if (!hasValidExtension(acceptedExtensions, name)) {
+        const msg = `Invalid file extension, only files with the following extensions accepted: ${acceptedExtensions.join(
+          ", "
+        )}`;
+
+        res.status(BAD_REQUEST).json({
+          errors: msg
+        });
+
+        return;
+      }
     }
 
     next();
@@ -64,6 +73,7 @@ export const fileValidator = (
 };
 
 const hasValidExtension = (acceptedExtensions: string[], fileName: string) => {
+  //todo change to use mimetype
   return (
     acceptedExtensions.includes(extname(fileName)) ||
     acceptedExtensions.includes("*")

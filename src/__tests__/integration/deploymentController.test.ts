@@ -1,6 +1,7 @@
 import GraphrootsServer from "../../server";
 import { resolve, join } from "path";
 import request from "supertest";
+import DeployerType from "../../deployer/deployerType";
 
 describe("Deployment controller integration tests", () => {
   let server: GraphrootsServer;
@@ -12,7 +13,8 @@ describe("Deployment controller integration tests", () => {
     subscriptionId: "dc783225-30bc-4727-bf07-13b1f6ef10bb",
     location: "us west",
     resourceGroupName: "graphroots",
-    webAppName: "graphroots"
+    webAppName: "graphroots",
+    cloudType: DeployerType.Azure
   };
 
   beforeAll(() => {
@@ -20,8 +22,14 @@ describe("Deployment controller integration tests", () => {
   });
 
   it("should return an error if no graphql schema is set in the current session", async () => {
-    await request(server.app)
-      .post("/api/v1/deployment")
+    const agent = request.agent(server.app);
+
+    await agent
+      .post("/api/v1/graphql/proj1/resolvers")
+      .attach("resolvers", join(graphqlpath, "resolvers.js"));
+
+    await agent
+      .post("/api/v1/deployment/proj1")
       .send(payload)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -33,15 +41,31 @@ describe("Deployment controller integration tests", () => {
       .expect(400);
   });
 
+  it("should return an error if no project exists in session storage", async () => {
+    const agent = request.agent(server.app);
+
+    await agent
+      .post("/api/v1/deployment/proj1")
+      .send(payload)
+      .set("Accept", "application/json")
+      .expect("Content-Type", /json/)
+      .expect(res =>
+        expect(res.body.error).toBe(
+          "No project with name proj1 found in current session"
+        )
+      )
+      .expect(400);
+  });
+
   it("should return an error if no resolvers are set in the current session", async () => {
     const agent = request.agent(server.app);
 
     await agent
-      .post("/api/v1/graphql/schema")
+      .post("/api/v1/graphql/proj1/schema")
       .attach("schema", join(graphqlpath, "schema.graphql"));
 
     await agent
-      .post("/api/v1/deployment")
+      .post("/api/v1/deployment/proj1")
       .send(payload)
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
@@ -55,7 +79,7 @@ describe("Deployment controller integration tests", () => {
 
   it("should return an error if the correct data isn't sent in the request body", async () => {
     await request(server.app)
-      .post("/api/v1/deployment")
+      .post("/api/v1/deployment/proj1")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(res => expect(res.body.errors).toMatchSnapshot())
@@ -66,15 +90,40 @@ describe("Deployment controller integration tests", () => {
     const agent = request.agent(server.app);
 
     await agent
-      .post("/api/v1/graphql/schema")
+      .post("/api/v1/graphql/proj1/schema")
       .attach("schema", join(graphqlpath, "schema.graphql"));
 
     await agent
-      .post("/api/v1/graphql/resolvers")
+      .post("/api/v1/graphql/proj1/resolvers")
       .attach("resolvers", join(graphqlpath, "resolvers.js"));
 
     await agent
-      .post("/api/v1/deployment")
+      .post("/api/v1/deployment/proj1")
+      .send(payload)
+      .set("Accept", "application/json")
+      .expect(201);
+  });
+
+  it(`should sucessfully zip and deploy resources with an added 
+      package.json and multiple resolvers`, async () => {
+    const agent = request.agent(server.app);
+
+    await agent
+      .post("/api/v1/graphql/proj1/schema")
+      .attach("schema", join(graphqlpath, "schema.graphql"));
+
+    await agent
+      .post("/api/v1/graphql/proj1/resolvers")
+      .attach("resolvers", join(graphqlpath, "resolvers.js"))
+      .attach("productResolver", join(graphqlpath, "productResolver.js"))
+      .attach("customerResolver", join(graphqlpath, "customerResolver.js"));
+
+    await agent
+      .post("/api/v1/graphql/proj1/dependencies")
+      .attach("package", join(graphqlpath, "package.json"));
+
+    await agent
+      .post("/api/v1/deployment/proj1")
       .send(payload)
       .set("Accept", "application/json")
       .expect(201);

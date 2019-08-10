@@ -6,6 +6,7 @@ import IGenerator from "../generator/generator";
 import CodeFile from "../generator/codeFile";
 import DeployerType from "../deployer/deployerType";
 import * as validators from "./validators";
+import { getResolversFromProject } from "../util/util";
 
 @Controller("api/v1/deployment")
 class DeploymentController {
@@ -14,10 +15,20 @@ class DeploymentController {
     private generator: IGenerator
   ) {}
 
-  @Post()
+  @Post(":project")
   @Middleware(validators.azureDeploymentValidation)
   async deploy(req: Request, res: Response) {
-    const { schema, resolvers } = req.session;
+    const { project } = req.params;
+
+    if (!req.session[project]) {
+      res.status(BAD_REQUEST).send({
+        error: `No project with name ${project} found in current session`
+      });
+
+      return;
+    }
+
+    const { schema, dependency = null } = req.session[project];
 
     if (!schema) {
       res
@@ -27,7 +38,9 @@ class DeploymentController {
       return;
     }
 
-    if (!resolvers) {
+    const resolvers = getResolversFromProject(req.session[project]);
+
+    if (resolvers.length === 0) {
       res
         .status(BAD_REQUEST)
         .send({ error: "No graphql resolvers found in current session" });
@@ -37,10 +50,11 @@ class DeploymentController {
 
     const deployer = this.createDeployer(req.body);
 
-    const codeFiles = this.createCodeFiles(schema, resolvers);
+    const codeFiles = this.createCodeFiles(schema, resolvers, dependency);
 
     const { generator } = this;
-    const files = generator.generate(codeFiles);
+
+    const files = await generator.generate(codeFiles);
 
     await deployer.deployResources();
     await deployer.deployApplication(files);
@@ -55,11 +69,18 @@ class DeploymentController {
     return deployerFactory(cloudType as DeployerType, ctx);
   }
 
-  private createCodeFiles(schema: string, resolvers: string): CodeFile[] {
-    return [
-      { filename: "schema.graphql", content: schema },
-      { filename: "resolvers.js", content: resolvers }
-    ];
+  private createCodeFiles(
+    schema: CodeFile,
+    resolvers: CodeFile[],
+    dependency: CodeFile | null
+  ): CodeFile[] {
+    const files = [schema, ...resolvers];
+
+    if (dependency) {
+      files.push(dependency);
+    }
+
+    return files;
   }
 }
 

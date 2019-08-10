@@ -1,17 +1,34 @@
 const express = require("express");
-const resolvers = require("./resolvers");
+{{#resolvers}}
+const {{trimExt}} = require("./{{trimExt}}")
+{{/resolvers}}
 const graphqlHTTP = require("express-graphql");
 const { buildSchema } = require("graphql");
+{{^isGQLSchemaLanguage}}
+const schema = require('./schema')
+{{/isGQLSchemaLanguage}}
 const fs = require("fs");
 
 const app = express();
+
+{{#isGQLSchemaLanguage}}
 const schema = fs.readFileSync("./schema.graphql", { encoding: "utf-8" });
+{{/isGQLSchemaLanguage}}
 
 app.use(
   "/graphql",
   graphqlHTTP({
+    {{#isGQLSchemaLanguage}}
     schema: buildSchema(schema),
-    rootValue: resolvers
+    {{/isGQLSchemaLanguage}}
+    {{^isGQLSchemaLanguage}}
+    schema,
+    {{/isGQLSchemaLanguage}}
+    rootValue: {
+      {{#resolvers}}
+      ...{{trimExt}},
+      {{/resolvers}}
+    }   
   })
 );
 

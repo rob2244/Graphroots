@@ -1,4 +1,4 @@
-const custs = [
+const customers = [
   {
     id: "e3fbbccb-7dae-4d88-89f9-5df99713a6ee",
     firstName: "Robin",
@@ -95,7 +95,7 @@ class Order {
   }
 
   buyer() {
-    return custs.find(c => c.id === this.customerId);
+    return customers.find(c => c.id === this.customerId);
   }
 
   products() {
@@ -133,14 +133,8 @@ const orders = [
 ];
 
 const resolvers = {
-  customers() {
-    return custs;
-  },
   orders({ customerId }) {
     return orders.filter(o => o.customerId === customerId);
-  },
-  products() {
-    return products;
   },
   productInfo({ productId }) {
     return products.find(p => p.productId === productId).info;
