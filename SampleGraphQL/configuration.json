@@ -1,0 +1,6 @@
+{
+	"host": "hostname.com",
+	"port": "12345",
+	"testConfig": "ConfigTest",
+	"testCOnfig2": "TestConfig2"
+}

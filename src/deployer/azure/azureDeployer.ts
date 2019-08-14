@@ -1,91 +1,99 @@
-import IDeployer from "../deployer";
-import * as msRestNodeAuth from "@azure/ms-rest-nodeauth";
-import { ResourceManagementClient } from "@azure/arm-resources";
-import { WebSiteManagementClient } from "@azure/arm-appservice";
-import fetch from "node-fetch";
-import { ServiceClientCredentials } from "@azure/ms-rest-js";
-import IAzureDeploymentContext from "./azureDeploymentContext";
+import IDeployer, { Configuration } from '../deployer';
+import * as msRestNodeAuth from '@azure/ms-rest-nodeauth';
+import { ResourceManagementClient } from '@azure/arm-resources';
+import { WebSiteManagementClient } from '@azure/arm-appservice';
+import fetch from 'node-fetch';
+import { ServiceClientCredentials } from '@azure/ms-rest-js';
+import IAzureDeploymentContext from './azureDeploymentContext';
+import map from 'lodash.map';
 
 export default class AzureDeployer implements IDeployer {
-  constructor(private context: IAzureDeploymentContext) {}
+	constructor(private context: IAzureDeploymentContext) {}
 
-  async deployResources(): Promise<void> {
-    const creds = await this.getCredentials();
+	async deployResources(config?: Configuration): Promise<void> {
+		const creds = await this.getCredentials();
 
-    await this.createResourceGroup(creds);
+		await this.createResourceGroup(creds);
 
-    const webappClient = new WebSiteManagementClient(
-      creds,
-      this.context.subscriptionId
-    );
+		const webappClient = new WebSiteManagementClient(
+			creds,
+			this.context.subscriptionId
+		);
 
-    await this.createWebApp(webappClient);
-  }
+		await this.createWebApp(webappClient, config);
+	}
 
-  private async createResourceGroup(creds: ServiceClientCredentials) {
-    const { subscriptionId, resourceGroupName, location } = this.context;
+	private async createResourceGroup(creds: ServiceClientCredentials) {
+		const { subscriptionId, resourceGroupName, location } = this.context;
 
-    const rgClient = new ResourceManagementClient(creds, subscriptionId);
+		const rgClient = new ResourceManagementClient(creds, subscriptionId);
 
-    return await rgClient.resourceGroups.createOrUpdate(resourceGroupName, {
-      location
-    });
-  }
+		return await rgClient.resourceGroups.createOrUpdate(resourceGroupName, {
+			location
+		});
+	}
 
-  private async createWebApp(client: WebSiteManagementClient) {
-    const { resourceGroupName, location, webAppName } = this.context;
+	private async createWebApp(
+		client: WebSiteManagementClient,
+		config: Configuration
+	) {
+		const { resourceGroupName, location, webAppName } = this.context;
+		const mappedConfig = config
+			? map(config, (k, v) => ({ name: k, value: v }))
+			: [];
 
-    return await client.webApps.createOrUpdate(resourceGroupName, webAppName, {
-      location,
-      // Required due to api bug
-      serverFarmId: "",
-      siteConfig: {
-        // Sets Kudu to do npm install during zip deploy
-        appSettings: [
-          { name: "SCM_DO_BUILD_DURING_DEPLOYMENT", value: "true" },
-          { name: "WEBSITE_NODE_DEFAULT_VERSION", value: "10.15.2" }
-        ]
-      }
-    });
-  }
+		return await client.webApps.createOrUpdate(resourceGroupName, webAppName, {
+			location,
+			// Required due to api bug
+			serverFarmId: '',
+			siteConfig: {
+				// Sets Kudu to do npm install during zip deploy
+				appSettings: [
+					{ name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' },
+					{ name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '10.15.2' },
+					...mappedConfig
+				]
+			}
+		});
+	}
 
-  async deployApplication(zipped: Buffer) {
-    const { webAppName, resourceGroupName } = this.context;
-    const url = `https://${webAppName}.scm.azurewebsites.net/api/zipdeploy`;
+	async deployApplication(zipped: Buffer) {
+		const { webAppName, resourceGroupName } = this.context;
+		const url = `https://${webAppName}.scm.azurewebsites.net/api/zipdeploy`;
 
-    const creds = await this.getCredentials();
+		const creds = await this.getCredentials();
 
-    const webappClient = new WebSiteManagementClient(
-      creds,
-      this.context.subscriptionId
-    );
+		const webappClient = new WebSiteManagementClient(
+			creds,
+			this.context.subscriptionId
+		);
 
-    const {
-      publishingUserName,
-      publishingPassword
-    } = await webappClient.webApps.listPublishingCredentials(
-      resourceGroupName,
-      webAppName
-    );
+		const {
+			publishingUserName,
+			publishingPassword
+		} = await webappClient.webApps.listPublishingCredentials(
+			resourceGroupName,
+			webAppName
+		);
 
-    const publishingCreds = Buffer.from(
-      `${publishingUserName}:${publishingPassword}`
-    ).toString("base64");
+		const publishingCreds = Buffer.from(
+			`${publishingUserName}:${publishingPassword}`
+		).toString('base64');
 
-    await fetch(url, {
-      method: "POST",
-      body: zipped,
-      headers: { Authorization: `Basic ${publishingCreds}` }
-    });
-  }
+		await fetch(url, {
+			method: 'POST',
+			body: zipped,
+			headers: { Authorization: `Basic ${publishingCreds}` }
+		});
+	}
 
-  private async getCredentials() {
-    const { clientId: clientID, clientSecret, tenantId } = this.context;
+	private async getCredentials() {
+		const { clientId: clientID, clientSecret, tenantId } = this.context;
 
-    return await msRestNodeAuth.loginWithServicePrincipalSecret(
-      clientID,
-      clientSecret,
-      tenantId
-    );
-  }
+		return await msRestNodeAuth.loginWithServicePrincipalSecret(
+			clientID,
+			clientSecret,
+			tenantId
+		);
+	}
 }
