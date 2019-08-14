@@ -1,87 +1,86 @@
-import { CREATED, BAD_REQUEST } from "http-status-codes";
-import { Controller, Post, Middleware } from "@overnightjs/core";
-import { Request, Response } from "express";
-import { createDeployer } from "../deployer/deployerFactory";
-import IGenerator from "../generator/generator";
-import CodeFile from "../generator/codeFile";
-import DeployerType from "../deployer/deployerType";
-import * as validators from "./validators";
-import { getResolversFromProject } from "../util/util";
+import { CREATED, BAD_REQUEST } from 'http-status-codes';
+import { Controller, Post, Middleware } from '@overnightjs/core';
+import { Request, Response } from 'express';
+import { createDeployer } from '../deployer/deployerFactory';
+import IGenerator from '../generator/generator';
+import CodeFile from '../generator/codeFile';
+import DeployerType from '../deployer/deployerType';
+import * as validators from './validators';
+import { getResolversFromProject, getConfigFromProject } from '../util/util';
 
-@Controller("api/v1/deployment")
+@Controller('api/v1/deployment')
 class DeploymentController {
-  constructor(
-    private deployerFactory: createDeployer,
-    private generator: IGenerator
-  ) {}
+	constructor(
+		private deployerFactory: createDeployer,
+		private generator: IGenerator
+	) {}
 
-  @Post(":project")
-  @Middleware(validators.azureDeploymentValidation)
-  async deploy(req: Request, res: Response) {
-    const { project } = req.params;
+	@Post(':project')
+	@Middleware(validators.azureDeploymentValidation)
+	async deploy(req: Request, res: Response) {
+		const { project } = req.params;
 
-    if (!req.session[project]) {
-      res.status(BAD_REQUEST).send({
-        error: `No project with name ${project} found in current session`
-      });
+		if (!req.session[project]) {
+			res.status(BAD_REQUEST).send({
+				error: `No project with name ${project} found in current session`
+			});
 
-      return;
-    }
+			return;
+		}
 
-    const { schema, dependency = null } = req.session[project];
+		const { schema, dependency = null } = req.session[project];
 
-    if (!schema) {
-      res
-        .status(BAD_REQUEST)
-        .send({ error: "No graphql schema found in current session" });
+		if (!schema) {
+			res
+				.status(BAD_REQUEST)
+				.send({ error: 'No graphql schema found in current session' });
 
-      return;
-    }
+			return;
+		}
 
-    const resolvers = getResolversFromProject(req.session[project]);
+		const resolvers = getResolversFromProject(req.session[project]);
 
-    if (resolvers.length === 0) {
-      res
-        .status(BAD_REQUEST)
-        .send({ error: "No graphql resolvers found in current session" });
+		if (resolvers.length === 0) {
+			res
+				.status(BAD_REQUEST)
+				.send({ error: 'No graphql resolvers found in current session' });
 
-      return;
-    }
+			return;
+		}
 
-    const deployer = this.createDeployer(req.body);
+		const deployer = this.createDeployer(req.body);
+		const codeFiles = this.createCodeFiles(schema, resolvers, dependency);
 
-    const codeFiles = this.createCodeFiles(schema, resolvers, dependency);
+		const { generator } = this;
+		const files = await generator.generate(codeFiles);
 
-    const { generator } = this;
+		const config = getConfigFromProject(req.session[project]);
+		await deployer.deployResources(config);
+		await deployer.deployApplication(files);
 
-    const files = await generator.generate(codeFiles);
+		res.sendStatus(CREATED);
+	}
 
-    await deployer.deployResources();
-    await deployer.deployApplication(files);
+	private createDeployer(requestBody: { [key: string]: string }) {
+		const { deployerFactory } = this;
+		const { cloudType, ...ctx } = requestBody;
 
-    res.sendStatus(CREATED);
-  }
+		return deployerFactory(cloudType as DeployerType, ctx);
+	}
 
-  private createDeployer(requestBody: { [key: string]: string }) {
-    const { deployerFactory } = this;
-    const { cloudType, ...ctx } = requestBody;
+	private createCodeFiles(
+		schema: CodeFile,
+		resolvers: CodeFile[],
+		dependency: CodeFile | null
+	): CodeFile[] {
+		const files = [schema, ...resolvers];
 
-    return deployerFactory(cloudType as DeployerType, ctx);
-  }
+		if (dependency) {
+			files.push(dependency);
+		}
 
-  private createCodeFiles(
-    schema: CodeFile,
-    resolvers: CodeFile[],
-    dependency: CodeFile | null
-  ): CodeFile[] {
-    const files = [schema, ...resolvers];
-
-    if (dependency) {
-      files.push(dependency);
-    }
-
-    return files;
-  }
+		return files;
+	}
 }
 
 export default DeploymentController;
