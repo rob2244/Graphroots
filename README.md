@@ -8,6 +8,8 @@ to this end I'm trying to build a server that developers can use to significantl
 For a developer, it should be as easy as uploading a Graph QL schema, writing resolvers for the schema,
 and then hitting a deploy button.
 
+**Open API documentation can be found at the /api-docs route when running the project**
+
 ## Running the project locally
 
 - Clone or fork the project
