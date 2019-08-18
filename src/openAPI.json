@@ -1,0 +1,462 @@
+{
+	"openapi": "3.0.2",
+	"info": {
+		"title": "Graphroots",
+		"version": "1.0",
+		"contact": {
+			"name": "Robin Seitz",
+			"email": "robinseitz@hotmail.com"
+		},
+		"description": "API making it easy to deploy GraphQL projects to the cloud with minimal boilerplate"
+	},
+	"servers": [{ "url": "https://localhost:4000/api/v1" }],
+	"components": {
+		"parameters": {
+			"project": {
+				"name": "project",
+				"in": "path",
+				"required": true,
+				"schema": {
+					"title": "project",
+					"type": "string"
+				},
+				"description": "Defines the project namespace that the user is currently working in. Any files uploaded will be saved under the specified namespace."
+			}
+		},
+		"schemas": {
+			"azureDeploymentContext": {
+				"title": "Azure Deployment Payload",
+				"type": "object",
+				"properties": {
+					"cloudType": {
+						"enum": ["Azure"],
+						"type": "string"
+					},
+					"clientId": {
+						"type": "string"
+					},
+					"clientSecret": {
+						"type": "string"
+					},
+					"tenantId": {
+						"type": "string"
+					},
+					"subscriptionId": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					},
+					"resourceGroupName": {
+						"type": "string"
+					},
+					"webAppName": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cloudType",
+					"clientId",
+					"clientSecret",
+					"tenantId",
+					"subscriptionId",
+					"location",
+					"resourceGroupName",
+					"webAppName"
+				]
+			},
+			"invalidFile": {
+				"type": "object",
+				"title": "Invalid File",
+				"properties": {
+					"errors": {
+						"type": "string"
+					}
+				}
+			},
+			"graphQLError": {
+				"title": "GraphQL Error",
+				"type": "object",
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"locations": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"line": {
+									"type": "string"
+								},
+								"column": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			},
+			"validationError": {
+				"title": "Validation Error",
+				"type": "object",
+				"properties": {
+					"msg": {
+						"type": "string"
+					},
+					"param": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"responses": {
+			"projectNotFound": {
+				"description": "No project with the name specified exists on the server",
+				"content": {
+					"application/json": {
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			},
+			"fileResponse": {
+				"description": "Zip file returned from server",
+				"content": {
+					"application/zip": {
+						"schema": {
+							"type": "string",
+							"format": "binary"
+						}
+					}
+				}
+			}
+		}
+	},
+	"tags": [
+		{
+			"name": "GraphQL",
+			"description": "Routes used to upload all of the resources needed to generate a GraphQL server"
+		},
+		{
+			"name": "Deployment",
+			"description": "Generate and deploy uploaded resources to a cloud provider"
+		},
+		{
+			"name": "Info",
+			"description": "Get information about your GraphQL workspace, including what resources are saved on the server"
+		}
+	],
+	"paths": {
+		"/graphql/{project}/schema": {
+			"post": {
+				"tags": ["GraphQL"],
+				"summary": "Add a GraphQL schema to your project",
+				"description": "Post a GraphQL schema file. This file may have either a .graphql (written in GraphQL schema language) or a .js (written using GraphQL objects) extension.",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "A GraphQL schema file (accepted extensions are .graphql and .js) that will be uploaded and saved to the server",
+					"content": {
+						"application/octet-stream": {
+							"schema": {
+								"type": "string",
+								"format": "binary",
+								"title": "schema"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Schema file was successfully saved to the store"
+					},
+					"400": {
+						"description": "An invalid schema file was uploaded. Either the file extension is unsupported or there were errors in the uploaded schema",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{ "$ref": "#/components/schemas/invalidFile" },
+										{
+											"type": "object",
+											"properties": {
+												"errors": {
+													"type": "array",
+													"items": {
+														"$ref": "#/components/schemas/graphQLError"
+													}
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/graphql/{project}/resolvers": {
+			"post": {
+				"tags": ["GraphQL"],
+				"summary": "Add resolver files for an uploaded GraphQL project",
+				"description": "Post resolver files to be added to the generated GraphQL server, accepts multiple files. **Note:** resolver files with the same name will overwrite existing resolver files on the server",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "A list of attached files that should be saved to the server",
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"filename": {
+										"type": "array",
+										"items": {
+											"type": "string",
+											"format": "binary"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Resolver files were successfully saved to the store"
+					},
+					"400": {
+						"description": "Invalid resolver files were uploaded. Resolver files must have a .js extension",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/invalidFile" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/graphql/{project}/dependencies": {
+			"post": {
+				"tags": ["GraphQL"],
+				"summary": "Add a package.json file for an uploaded GraphQL schema",
+				"description": "A package.json file must be included if your resolvers or schema files reference any external libraries. These dependencies will be installed for you on deployment. **Note:** package.json files that are uploaded will overwrite any existing package.json files on the server",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "A package.json file that will be uploaded and saved to the server",
+					"content": {
+						"application/octet-stream": {
+							"schema": {
+								"type": "string",
+								"format": "binary",
+								"title": "package"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Package.json was successfully saved to the server"
+					},
+					"400": {
+						"description": "Invalid package.json file was uploaded. Package.json files must have a .json extension",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/invalidFile" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/graphql/{project}/configuration": {
+			"post": {
+				"tags": ["GraphQL"],
+				"summary": "Add a configuration file to the GraphQL project",
+				"description": "A configuration file may be uploaded to provide config values that you use in your code. The extension of the file must be .json. **Note:** The configuration.json file only supports string keys and values. The keys/values in the configuration file are saved as environment variables.",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "A configuration file that will be uploaded and saved to the server. The extension of the file must be .json",
+					"content": {
+						"application/octet-stream": {
+							"schema": {
+								"type": "string",
+								"format": "binary",
+								"title": "configuration"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "configuration file was successfully saved to the server"
+					},
+					"400": {
+						"description": "Invalid configuration file was uploaded. Either an invalid extension was provided, or the configuration file has non string values",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/invalidFile" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"/deployment/{project}": {
+			"post": {
+				"tags": ["Deployment"],
+				"summary": "Deploy all of your uploaded GraphQL assets to a cloud provider",
+				"description": "At a minimum you must have uploaded a GraphQL schema file and a resolver file. If your resolvers include external dependencies, don't forget to upload a package.json file. All of this can be done through the /graphql routes.",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "Payload which includes the cloud provider to which resources should be deployed, as well as connection and resource information",
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/azureDeploymentContext"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "The API was successfully created on the cloud providers platform"
+					},
+					"400": {
+						"description": "The API request was invalid. This may be because: there was no project with the specified project name, no GraphQL schema was uploaded, no GraphQL resolvers where uploaded, or an invalid payload was provided.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"oneOf": [
+										{
+											"type": "object",
+											"properties": {
+												"error": {
+													"type": "string"
+												}
+											}
+										},
+										{
+											"type": "object",
+											"properties": {
+												"errors": {
+													"type": "array",
+													"items": {
+														"$ref": "#/components/schemas/validationError"
+													}
+												}
+											}
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/info/{project}/resolvers": {
+			"get": {
+				"tags": ["Info"],
+				"summary": "Get all resolvers currently uploaded to the project",
+				"description": "Returns a zipped file containing all the resolver files the server is tracking for the project namespace",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/fileResponse"
+					},
+					"204": {
+						"description": "No resolvers have been uploaded for the project"
+					},
+					"400": {
+						"$ref": "#/components/responses/projectNotFound"
+					}
+				}
+			}
+		},
+		"/info/{project}/dependencies": {
+			"get": {
+				"tags": ["Info"],
+				"summary": "Get the current package.json file associated with the project",
+				"description": "Returns a zipped file containing the package.json currently uploaded to the server",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/fileResponse"
+					},
+					"204": {
+						"description": "No dependencies have been uploaded for the project"
+					},
+					"400": {
+						"$ref": "#/components/responses/projectNotFound"
+					}
+				}
+			}
+		},
+		"/info/{project}/schema": {
+			"get": {
+				"tags": ["Info"],
+				"summary": "Get the current schema file associated with the project",
+				"description": "Returns a zipped file containing the schema file currently uploaded to the server",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/project"
+					}
+				],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/fileResponse"
+					},
+					"204": {
+						"description": "No schema has been uploaded for the project"
+					},
+					"400": {
+						"$ref": "#/components/responses/projectNotFound"
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,117 +1,105 @@
-import { Controller, Get } from "@overnightjs/core";
-import { Request, Response } from "express";
-import { BAD_REQUEST, OK } from "http-status-codes";
-import { getResolversFromProject } from "../util/util";
-import AdmZip from "adm-zip";
-import CodeFile from "../generator/codeFile";
+import { Controller, Get } from '@overnightjs/core';
+import { Request, Response } from 'express';
+import { BAD_REQUEST, OK, NO_CONTENT } from 'http-status-codes';
+import { getResolversFromProject } from '../util/util';
+import AdmZip from 'adm-zip';
+import CodeFile from '../generator/codeFile';
 
-@Controller("api/v1/info")
+@Controller('api/v1/info')
 class InfoController {
-  @Get(":project/resolvers")
-  resolvers(req: Request, res: Response) {
-    const { params, session } = req;
-    const { project } = params;
+	@Get(':project/resolvers')
+	resolvers(req: Request, res: Response) {
+		const { params, session } = req;
+		const { project } = params;
 
-    if (!session[project]) {
-      res.status(BAD_REQUEST).json({
-        error: `No project with name ${project} found in current session`
-      });
+		if (!session[project]) {
+			res.status(BAD_REQUEST).json({
+				error: `No project with name ${project} found in current session`
+			});
 
-      return;
-    }
+			return;
+		}
 
-    const resolvers = getResolversFromProject(session[project]);
+		const resolvers = getResolversFromProject(session[project]);
 
-    if (!resolvers || resolvers.length === 0) {
-      res
-        .status(OK)
-        .json({ message: `No resolvers uploaded for project ${project}` });
-    }
+		if (!resolvers || resolvers.length === 0) res.sendStatus(NO_CONTENT);
 
-    const buff = this.zipFiles(...resolvers);
+		const buff = this.zipFiles(...resolvers);
 
-    res
-      .set({
-        "Content-Disposition": 'attachment; filename="resolvers.zip"',
-        "Content-Type": "application/zip"
-      })
-      .status(OK)
-      .send(buff);
-  }
+		res
+			.set({
+				'Content-Disposition': 'attachment; filename="resolvers.zip"',
+				'Content-Type': 'application/zip'
+			})
+			.status(OK)
+			.send(buff);
+	}
 
-  @Get(":project/dependencies")
-  dependencies(req: Request, res: Response) {
-    const { params, session } = req;
-    const { project } = params;
+	@Get(':project/dependencies')
+	dependencies(req: Request, res: Response) {
+		const { params, session } = req;
+		const { project } = params;
 
-    if (!session[project]) {
-      res.status(BAD_REQUEST).json({
-        error: `No project with name ${project} found in current session`
-      });
+		if (!session[project]) {
+			res.status(BAD_REQUEST).json({
+				error: `No project with name ${project} found in current session`
+			});
 
-      return;
-    }
+			return;
+		}
 
-    const dependency: CodeFile = session[project].dependency;
+		const dependency: CodeFile = session[project].dependency;
 
-    if (!dependency) {
-      res
-        .status(OK)
-        .json({ message: `No dependencies uploaded for project ${project}` });
-    }
+		if (!dependency) res.sendStatus(NO_CONTENT);
 
-    const buff = this.zipFiles(dependency);
+		const buff = this.zipFiles(dependency);
 
-    res
-      .set({
-        "Content-Disposition": 'attachment; filename="dependencies.zip"',
-        "Content-Type": "application/zip"
-      })
-      .status(OK)
-      .send(buff);
-  }
+		res
+			.set({
+				'Content-Disposition': 'attachment; filename="dependencies.zip"',
+				'Content-Type': 'application/zip'
+			})
+			.status(OK)
+			.send(buff);
+	}
 
-  @Get(":project/schema")
-  schema(req: Request, res: Response) {
-    const { params, session } = req;
-    const { project } = params;
+	@Get(':project/schema')
+	schema(req: Request, res: Response) {
+		const { params, session } = req;
+		const { project } = params;
 
-    if (!session[project]) {
-      res.status(BAD_REQUEST).json({
-        error: `No project with name ${project} found in current session`
-      });
+		if (!session[project]) {
+			res.status(BAD_REQUEST).json({
+				error: `No project with name ${project} found in current session`
+			});
 
-      return;
-    }
+			return;
+		}
 
-    const schema: CodeFile = session[project].schema;
+		const schema: CodeFile = session[project].schema;
 
-    if (!schema) {
-      res
-        .status(OK)
-        .json({ message: `No schema uploaded for project ${project}` });
-    }
+		if (!schema) res.sendStatus(NO_CONTENT);
 
-    const buff = this.zipFiles(schema);
+		const buff = this.zipFiles(schema);
 
-    res
-      .set({
-        "Content-Disposition": 'attachment; filename="schema.zip"',
-        "Content-Type": "application/zip"
-      })
-      .status(OK)
-      .send(buff);
-  }
+		res
+			.set({
+				'Content-Disposition': 'attachment; filename="schema.zip"',
+				'Content-Type': 'application/zip'
+			})
+			.status(OK)
+			.send(buff);
+	}
 
-  private zipFiles(...files: CodeFile[]) {
-    const zipper = new AdmZip();
+	private zipFiles(...files: CodeFile[]) {
+		const zipper = new AdmZip();
 
-    for (const { filename, content } of files) {
-      zipper.addFile(filename, Buffer.alloc(content.length, content));
-    }
+		for (const { filename, content } of files) {
+			zipper.addFile(filename, Buffer.alloc(content.length, content));
+		}
 
-    return zipper.toBuffer();
-  }
+		return zipper.toBuffer();
+	}
 }
 
 export default InfoController;
