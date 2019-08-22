@@ -1,5 +1,6 @@
 enum DeployerType {
-  Azure = "Azure"
+	Azure = 'Azure',
+	AWS = 'AWS'
 }
 
 export default DeployerType;
