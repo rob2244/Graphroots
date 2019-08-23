@@ -17,14 +17,16 @@ import {
 	ApplicationDescriptionMessage,
 	CreateApplicationMessage,
 	CreateApplicationVersionMessage,
-	ApplicationVersionDescriptionMessage
+	ApplicationVersionDescriptionMessage,
+	EnvironmentDescriptionsMessage
 } from 'aws-sdk/clients/elasticbeanstalk';
 import { ManagedUpload } from 'aws-sdk/lib/s3/managed_upload';
 import { CreateBucketOutput } from 'aws-sdk/clients/s3';
 
 export default class AWSDeployer implements IDeployer {
 	constructor(private context: AWSDeploymentContext) {}
-	private S3CODEKEY = 'CODE';
+	private s3CodeKey = 'CODE';
+	private waitTime = 5000;
 
 	async deployResources(config?: Configuration): Promise<void> {
 		await this.createResourceGroup();
@@ -173,17 +175,69 @@ export default class AWSDeployer implements IDeployer {
 			region
 		});
 
+		await this.createApplicationVersion(elasticBeanstalk, bucketName);
+
+		/**
+		 * If the environment is brand new and isn't in a ready state the update will fail.
+		 * Therefore polling must be done to make sure the environment is ready before updating it.
+		 * Currently this solution isn't ideal, as if an exception is thrown during the update inside the
+		 * setTimeout the exception will be swallowed.
+		 */
+		if (!(await this.isEnvironmentReady(elasticBeanstalk))) {
+			const id = setInterval(async () => {
+				if (await this.isEnvironmentReady(elasticBeanstalk)) {
+					clearInterval(id);
+					await this.updateBeanstalkEnvironment(elasticBeanstalk);
+				}
+			}, this.waitTime);
+
+			return;
+		}
+
+		return this.updateBeanstalkEnvironment(elasticBeanstalk);
+	}
+
+	private uploadZip(bucketName: string, zipped: Buffer): Promise<void> {
+		const { region } = this.context;
+		var s3 = new S3({ credentials: this.getCredentials(), region });
+
+		return new Promise((res, rej) => {
+			s3.upload(
+				{
+					Key: this.s3CodeKey,
+					Body: zipped,
+					Bucket: bucketName
+				},
+				{},
+				(err: Error, _: ManagedUpload.SendData) => {
+					if (err) {
+						rej(err);
+						return;
+					}
+
+					res();
+				}
+			);
+		});
+	}
+
+	private createApplicationVersion(
+		client: ElasticBeanstalk,
+		bucketName: string
+	) {
+		const { applicationName, applicationVersion } = this.context;
+
 		const options: CreateApplicationVersionMessage = {
 			ApplicationName: applicationName,
 			SourceBundle: {
 				S3Bucket: bucketName,
-				S3Key: this.S3CODEKEY
+				S3Key: this.s3CodeKey
 			},
 			VersionLabel: applicationVersion
 		};
 
 		return new Promise((res, rej) => {
-			elasticBeanstalk.createApplicationVersion(
+			client.createApplicationVersion(
 				options,
 				(err: AWSError, _: ApplicationVersionDescriptionMessage) => {
 					if (err) {
@@ -197,19 +251,48 @@ export default class AWSDeployer implements IDeployer {
 		});
 	}
 
-	private uploadZip(bucketName: string, zipped: Buffer): Promise<void> {
-		const { region } = this.context;
-		var s3 = new S3({ credentials: this.getCredentials(), region });
+	private isEnvironmentReady(client: ElasticBeanstalk): Promise<boolean> {
+		const { applicationName } = this.context;
 
 		return new Promise((res, rej) => {
-			s3.upload(
+			client.describeEnvironments(
 				{
-					Key: this.S3CODEKEY,
-					Body: zipped,
-					Bucket: bucketName
+					ApplicationName: applicationName,
+					EnvironmentNames: [applicationName],
+					IncludeDeleted: false
 				},
-				{},
-				(err: Error, _: ManagedUpload.SendData) => {
+				(err: AWSError, data: EnvironmentDescriptionsMessage) => {
+					if (err) {
+						rej(err);
+						return;
+					}
+
+					const env = data.Environments.find(
+						c => c.EnvironmentName === applicationName
+					);
+
+					if (!env) {
+						rej(`No environment with name ${applicationName} found`);
+						return;
+					}
+
+					res(env.Status && env.Status === 'Ready');
+				}
+			);
+		});
+	}
+
+	private updateBeanstalkEnvironment(client: ElasticBeanstalk): Promise<void> {
+		const { applicationName, applicationVersion } = this.context;
+
+		return new Promise((res, rej) => {
+			client.updateEnvironment(
+				{
+					ApplicationName: applicationName,
+					EnvironmentName: applicationName,
+					VersionLabel: applicationVersion
+				},
+				(err: AWSError, _: EnvironmentDescription) => {
 					if (err) {
 						rej(err);
 						return;
