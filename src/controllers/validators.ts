@@ -3,25 +3,51 @@ import { body, validationResult } from 'express-validator';
 import { BAD_REQUEST } from 'http-status-codes';
 import { UploadedFile } from 'express-fileupload';
 import { extname } from 'path';
+import DeployerType from '../deployer/deployerType';
 
 export const azureDeploymentValidation: RequestHandler = async (
 	req,
 	res,
 	next
 ) => {
-	await body([
-		'cloudType',
-		'clientId',
-		'clientSecret',
-		'tenantId',
-		'subscriptionId',
-		'location',
-		'resourceGroupName',
-		'webAppName'
-	])
-		.exists({ checkFalsy: true, checkNull: true })
-		.isString()
-		.run(req);
+	switch (req.body.cloudType) {
+		case DeployerType.Azure:
+			await body([
+				'clientId',
+				'clientSecret',
+				'tenantId',
+				'subscriptionId',
+				'location',
+				'resourceGroupName',
+				'webAppName'
+			])
+				.exists({ checkFalsy: true, checkNull: true })
+				.isString()
+				.run(req);
+			break;
+
+		case DeployerType.AWS:
+			await body([
+				'accessKeyId',
+				'secretAccessKey',
+				'resourceGroupName',
+				'applicationName',
+				'region',
+				'applicationVersion'
+			])
+				.exists({ checkFalsy: true, checkNull: true })
+				.isString()
+				.run(req);
+			break;
+
+		default:
+			res.status(BAD_REQUEST).json({
+				errors: [
+					{ msg: 'Invalid Cloud Type', param: 'cloudType', location: 'body' }
+				]
+			});
+			return;
+	}
 
 	const result = validationResult(req);
 	if (!result.isEmpty()) {
