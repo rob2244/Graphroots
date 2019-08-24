@@ -4,83 +4,8 @@ exports[`Deployment controller integration tests should return an error if the c
 Array [
   Object {
     "location": "body",
-    "msg": "Invalid value",
+    "msg": "Invalid Cloud Type",
     "param": "cloudType",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "clientId",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "clientSecret",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "tenantId",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "subscriptionId",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "location",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "resourceGroupName",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "webAppName",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "cloudType",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "clientId",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "clientSecret",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "tenantId",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "subscriptionId",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "location",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "resourceGroupName",
-  },
-  Object {
-    "location": "body",
-    "msg": "Invalid value",
-    "param": "webAppName",
   },
 ]
 `;
