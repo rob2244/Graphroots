@@ -22,16 +22,25 @@ import {
 } from 'aws-sdk/clients/elasticbeanstalk';
 import { ManagedUpload } from 'aws-sdk/lib/s3/managed_upload';
 import { CreateBucketOutput } from 'aws-sdk/clients/s3';
+import map from 'lodash.map';
 
 export default class AWSDeployer implements IDeployer {
 	constructor(private context: AWSDeploymentContext) {}
 	private s3CodeKey = 'CODE';
 	private waitTime = 5000;
+	private defaultS3Namespace = 'aws:elasticbeanstalk:application:environment';
 
 	async deployResources(config?: Configuration): Promise<void> {
 		await this.createResourceGroup();
-		await this.createApplication();
-		await this.createEnvironment();
+
+		const { region } = this.context;
+		const elasticBeanstalk = new ElasticBeanstalk({
+			credentials: this.getCredentials(),
+			region
+		});
+
+		await this.createApplication(elasticBeanstalk);
+		await this.createEnvironment(elasticBeanstalk, config);
 		await this.createS3Bucket();
 	}
 
@@ -68,12 +77,8 @@ export default class AWSDeployer implements IDeployer {
 		});
 	}
 
-	private createApplication(): Promise<void> {
-		const { region, applicationName } = this.context;
-		const elasticBeanstalk = new ElasticBeanstalk({
-			credentials: this.getCredentials(),
-			region
-		});
+	private createApplication(client: ElasticBeanstalk): Promise<void> {
+		const { applicationName } = this.context;
 
 		const options: CreateApplicationMessage = {
 			ApplicationName: applicationName,
@@ -82,7 +87,7 @@ export default class AWSDeployer implements IDeployer {
 		};
 
 		return new Promise((res, rej) => {
-			elasticBeanstalk.createApplication(
+			client.createApplication(
 				options,
 				(err: AWSError, _: ApplicationDescriptionMessage) => {
 					if (
@@ -101,23 +106,31 @@ export default class AWSDeployer implements IDeployer {
 		});
 	}
 
-	private createEnvironment(): Promise<void> {
-		const { region, applicationName } = this.context;
-		const elasticBeanstalk = new ElasticBeanstalk({
-			credentials: this.getCredentials(),
-			region
-		});
+	private createEnvironment(
+		client: ElasticBeanstalk,
+		config?: Configuration
+	): Promise<void> {
+		const { applicationName } = this.context;
+
+		const mappedConfig = config
+			? map(config, (k, v) => ({
+					Namespace: this.defaultS3Namespace,
+					OptionName: k,
+					Value: v
+			  }))
+			: [];
 
 		const options: CreateEnvironmentMessage = {
 			ApplicationName: applicationName,
 			EnvironmentName: applicationName,
 			SolutionStackName: '64bit Amazon Linux 2018.03 v4.10.1 running Node.js',
 			Description: 'Graphroots generated environment',
-			Tags: [{ Key: 'graphroots', Value: 'generated' }]
+			Tags: [{ Key: 'graphroots', Value: 'generated' }],
+			OptionSettings: mappedConfig
 		};
 
 		return new Promise((res, rej) => {
-			elasticBeanstalk.createEnvironment(
+			client.createEnvironment(
 				options,
 				(err: AWSError, _: EnvironmentDescription) => {
 					if (

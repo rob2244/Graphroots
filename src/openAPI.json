@@ -65,6 +65,42 @@
 					"webAppName"
 				]
 			},
+			"awsDeploymentContext": {
+				"title": "AWS Deployment Payload",
+				"properties": {
+					"cloudType": {
+						"enum": ["AWS"],
+						"type": "string"
+					},
+					"accessKeyId": {
+						"type": "string"
+					},
+					"secretAccessKey": {
+						"type": "string"
+					},
+					"resourceGroupName": {
+						"type": "string"
+					},
+					"applicationName": {
+						"type": "string"
+					},
+					"region": {
+						"type": "string"
+					},
+					"applicationVersion": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cloudType",
+					"accessKeyId",
+					"secretAccessKey",
+					"resourceGroupName",
+					"applicationName",
+					"region",
+					"applicationVersion"
+				]
+			},
 			"invalidFile": {
 				"type": "object",
 				"title": "Invalid File",
@@ -347,7 +383,10 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/azureDeploymentContext"
+								"oneOf": [
+									{ "$ref": "#/components/schemas/azureDeploymentContext" },
+									{ "$ref": "#/components/schemas/awsDeploymentContext" }
+								]
 							}
 						}
 					}

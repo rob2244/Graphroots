@@ -10,7 +10,7 @@
 		"dev": "ts-node-dev --respawn --transpileOnly ./src/index.ts",
 		"dev:docker": "docker-compose -f docker-compose-dev.yml up",
 		"start": "node .",
-		"test": "jest deployer.test.ts",
+		"test": "jest --watch",
 		"test:ci": "jest"
 	},
 	"dependencies": {
