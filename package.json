@@ -16,7 +16,7 @@
 	"dependencies": {
 		"@azure/arm-appservice": "^5.7.0",
 		"@azure/arm-resources": "^1.1.0",
-		"@azure/ms-rest-nodeauth": "^2.0.2",
+		"@azure/ms-rest-nodeauth": "^3.0.8",
 		"@overnightjs/core": "^1.6.9",
 		"@overnightjs/logger": "^1.1.9",
 		"adm-zip": "^0.4.13",
